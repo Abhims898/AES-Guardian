@@ -39,7 +39,7 @@ class AESHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
-        post_data = urllib.parse.parse_qs(self.rfile.read(content_length).decode('utf-8')
+        post_data = urllib.parse.parse_qs(self.rfile.read(content_length).decode('utf-8'))
         
         action = post_data.get('action', [''])[0]
         response = {}

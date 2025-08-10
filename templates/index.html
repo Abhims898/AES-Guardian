@@ -1,74 +1,260 @@
-<!-- Add this to your CSS section -->
-<style>
-    .copy-btn {
-        background-color: var(--accent);
-        color: white;
-        border: none;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        cursor: pointer;
-        margin-left: 0.5rem;
-        transition: all 0.2s ease;
-    }
-    
-    .copy-btn:hover {
-        background-color: var(--secondary);
-    }
-    
-    .copy-btn:active {
-        transform: translateY(1px);
-    }
-    
-    .result-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-</style>
-
-<!-- Update the result sections in both tabs -->
-<div class="result" id="encryptResult">
-    <div class="result-header">
-        <div class="result-title">Encrypted Result (Base64)</div>
-        <button class="copy-btn" onclick="copyToClipboard('encryptedText')">
-            📋 Copy
-        </button>
-    </div>
-    <div class="result-content" id="encryptedText"></div>
-</div>
-
-<div class="result" id="decryptResult">
-    <div class="result-header">
-        <div class="result-title">Decrypted Plaintext</div>
-        <button class="copy-btn" onclick="copyToClipboard('decryptedText')">
-            📋 Copy
-        </button>
-    </div>
-    <div class="result-content" id="decryptedText"></div>
-</div>
-
-<!-- Add this JavaScript function -->
-<script>
-    function copyToClipboard(elementId) {
-        const element = document.getElementById(elementId);
-        const text = element.textContent;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES Encryption Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AES Encryption Tool</h1>
+            <p class="subtitle">Advanced Encryption Standard (AES) Implementation</p>
+        </header>
         
-        navigator.clipboard.writeText(text).then(() => {
-            // Show success feedback
-            const originalText = element.textContent;
-            element.textContent = "Copied to clipboard!";
-            element.style.color = "green";
+        <div class="content">
+            <div class="tabs">
+                <div class="tab active" data-tab="encrypt">Encrypt</div>
+                <div class="tab" data-tab="decrypt">Decrypt</div>
+            </div>
             
-            // Revert after 2 seconds
-            setTimeout(() => {
-                element.textContent = originalText;
-                element.style.color = "";
-            }, 2000);
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-            alert('Failed to copy to clipboard');
+            <div class="alert alert-danger" id="errorAlert"></div>
+            <div class="alert alert-success" id="successAlert"></div>
+            
+            <div class="tab-content active" id="encryptTab">
+                <div class="form-group">
+                    <label for="encryptPlaintext">Plaintext</label>
+                    <textarea id="encryptPlaintext" placeholder="Enter text to encrypt"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="encryptKey">Secret Key (any length)</label>
+                    <input type="text" id="encryptKey" placeholder="Enter your secret key (any length)">
+                    <div id="keyInfo" class="key-info-advanced"></div>
+                </div>
+                
+                <button class="btn" id="encryptBtn">
+                    <span>🔒</span> Encrypt
+                </button>
+                
+                <div class="result" id="encryptResult">
+                    <div class="result-header">
+                        <div class="result-title">Encrypted Result (Base64)</div>
+                        <button class="copy-btn" onclick="copyToClipboard('encryptedText', this)">
+                            📋 Copy
+                        </button>
+                    </div>
+                    <div class="result-content" id="encryptedText"></div>
+                    
+                    <div class="key-details" id="keyDetails" style="margin-top: 1rem; display: none;">
+                        <div class="result-title">Generated Keys (Base64)</div>
+                        <div class="result-content">
+                            <p><strong>AES-128:</strong> <span id="aes128Key"></span></p>
+                            <p><strong>AES-192:</strong> <span id="aes192Key"></span></p>
+                            <p><strong>AES-256:</strong> <span id="aes256Key"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="decryptTab">
+                <div class="form-group">
+                    <label for="decryptCiphertext">Ciphertext (Base64)</label>
+                    <textarea id="decryptCiphertext" placeholder="Enter ciphertext to decrypt"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="decryptKey">Secret Key</label>
+                    <input type="text" id="decryptKey" placeholder="Enter the same key used for encryption">
+                    <div id="decryptKeyInfo" class="key-info-advanced"></div>
+                </div>
+                
+                <button class="btn" id="decryptBtn">
+                    <span>🔓</span> Decrypt
+                </button>
+                
+                <div class="result" id="decryptResult">
+                    <div class="result-header">
+                        <div class="result-title">Decrypted Plaintext</div>
+                        <button class="copy-btn" onclick="copyToClipboard('decryptedText', this)">
+                            📋 Copy
+                        </button>
+                    </div>
+                    <div class="result-content" id="decryptedText"></div>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-title">About AES Encryption</div>
+                <div class="info-content">
+                    <p><strong>Key Handling:</strong> Any length key is automatically hashed to create secure AES keys (128, 192, or 256-bit).</p>
+                    <p><strong>Security:</strong> Uses SHA-256 to derive keys, ensuring consistent and cryptographically strong keys.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab') + 'Tab';
+                document.getElementById(tabId).classList.add('active');
+            });
         });
-    }
-</script>
+        
+        // Key information display
+        function updateKeyInfo() {
+            const key = document.getElementById('encryptKey').value;
+            const keyInfo = document.getElementById('keyInfo');
+            
+            if (key.length > 0) {
+                keyInfo.innerHTML = `
+                    <p>Key will be securely hashed to:</p>
+                    <ul>
+                        <li>AES-128: First 16 bytes of SHA-256 hash</li>
+                        <li>AES-192: First 24 bytes of SHA-256 hash</li>
+                        <li>AES-256: First 32 bytes of SHA-256 hash (used by default)</li>
+                    </ul>
+                `;
+            } else {
+                keyInfo.innerHTML = '';
+            }
+        }
+        
+        document.getElementById('encryptKey').addEventListener('input', updateKeyInfo);
+        document.getElementById('decryptKey').addEventListener('input', updateKeyInfo);
+        
+        // Clipboard functionality
+        function copyToClipboard(elementId, button) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            const originalText = button.innerHTML;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                button.innerHTML = "✓ Copied!";
+                button.style.backgroundColor = "#4CAF50";
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = "";
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                button.innerHTML = "✗ Failed";
+                button.style.backgroundColor = "#f44336";
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = "";
+                }, 2000);
+                
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            });
+        }
+        
+        // Encryption
+        document.getElementById('encryptBtn').addEventListener('click', async () => {
+            const plaintext = document.getElementById('encryptPlaintext').value;
+            const key = document.getElementById('encryptKey').value;
+            
+            if (!plaintext || !key) {
+                showAlert(document.getElementById('errorAlert'), 'Please enter both plaintext and key');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=encrypt&plaintext=${encodeURIComponent(plaintext)}&key=${encodeURIComponent(key)}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('encryptedText').textContent = data.ciphertext;
+                    document.getElementById('encryptResult').style.display = 'block';
+                    
+                    // Show key details
+                    document.getElementById('aes128Key').textContent = data.key_info.aes_128;
+                    document.getElementById('aes192Key').textContent = data.key_info.aes_192;
+                    document.getElementById('aes256Key').textContent = data.key_info.aes_256;
+                    document.getElementById('keyDetails').style.display = 'block';
+                    
+                    showAlert(document.getElementById('successAlert'), 'Encryption successful!', false);
+                } else {
+                    showAlert(document.getElementById('errorAlert'), data.message);
+                }
+            } catch (error) {
+                showAlert(document.getElementById('errorAlert'), 'An error occurred during encryption');
+                console.error(error);
+            }
+        });
+        
+        // Decryption
+        document.getElementById('decryptBtn').addEventListener('click', async () => {
+            const ciphertext = document.getElementById('decryptCiphertext').value;
+            const key = document.getElementById('decryptKey').value;
+            
+            if (!ciphertext || !key) {
+                showAlert(document.getElementById('errorAlert'), 'Please enter both ciphertext and key');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=decrypt&ciphertext=${encodeURIComponent(ciphertext)}&key=${encodeURIComponent(key)}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('decryptedText').textContent = data.plaintext;
+                    document.getElementById('decryptResult').style.display = 'block';
+                    showAlert(document.getElementById('successAlert'), 'Decryption successful!', false);
+                } else {
+                    showAlert(document.getElementById('errorAlert'), data.message);
+                }
+            } catch (error) {
+                showAlert(document.getElementById('errorAlert'), 'An error occurred during decryption');
+                console.error(error);
+            }
+        });
+        
+        // Alert handling
+        function showAlert(element, message, isError = true) {
+            element.textContent = message;
+            element.style.display = 'block';
+            
+            if (isError) {
+                element.className = 'alert alert-danger';
+            } else {
+                element.className = 'alert alert-success';
+            }
+            
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

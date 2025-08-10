@@ -5,7 +5,247 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AES Encryption Tool</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #1b263b;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --danger: #f72585;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 2rem;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: #f5f5f5;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border 0.3s ease;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .result {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            display: none;
+        }
+        
+        .result-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .result-content {
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        
+        .alert-danger {
+            background-color: #fdecea;
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+        
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+        
+        .info-box {
+            background-color: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .info-title {
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: var(--primary);
+        }
+        
+        .info-content {
+            line-height: 1.6;
+        }
+        
+        .key-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        /* Clipboard button styles */
+        .copy-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-left: 0.5rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--secondary);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -31,12 +271,12 @@
                 
                 <div class="form-group">
                     <label for="encryptKey">Secret Key (any length)</label>
-                    <input type="text" id="encryptKey" placeholder="Enter your secret key (any length)">
-                    <div id="keyInfo" class="key-info-advanced"></div>
+                    <input type="text" id="encryptKey" placeholder="Enter your secret key">
+                    <p class="key-info">Your key will be automatically converted to a secure AES key</p>
                 </div>
                 
                 <button class="btn" id="encryptBtn">
-                    <span>🔒</span> Encrypt
+                    <i>🔒</i> Encrypt
                 </button>
                 
                 <div class="result" id="encryptResult">
@@ -47,15 +287,6 @@
                         </button>
                     </div>
                     <div class="result-content" id="encryptedText"></div>
-                    
-                    <div class="key-details" id="keyDetails" style="margin-top: 1rem; display: none;">
-                        <div class="result-title">Generated Keys (Base64)</div>
-                        <div class="result-content">
-                            <p><strong>AES-128:</strong> <span id="aes128Key"></span></p>
-                            <p><strong>AES-192:</strong> <span id="aes192Key"></span></p>
-                            <p><strong>AES-256:</strong> <span id="aes256Key"></span></p>
-                        </div>
-                    </div>
                 </div>
             </div>
             
@@ -68,11 +299,11 @@
                 <div class="form-group">
                     <label for="decryptKey">Secret Key</label>
                     <input type="text" id="decryptKey" placeholder="Enter the same key used for encryption">
-                    <div id="decryptKeyInfo" class="key-info-advanced"></div>
+                    <p class="key-info">Must be the same key used for encryption</p>
                 </div>
                 
                 <button class="btn" id="decryptBtn">
-                    <span>🔓</span> Decrypt
+                    <i>🔓</i> Decrypt
                 </button>
                 
                 <div class="result" id="decryptResult">
@@ -89,11 +320,22 @@
             <div class="info-box">
                 <div class="info-title">About AES Encryption</div>
                 <div class="info-content">
-                    <p><strong>Key Handling:</strong> Any length key is automatically hashed to create secure AES keys (128, 192, or 256-bit).</p>
-                    <p><strong>Security:</strong> Uses SHA-256 to derive keys, ensuring consistent and cryptographically strong keys.</p>
+                    <p>The Advanced Encryption Standard (AES) is a symmetric block cipher used by governments and organizations worldwide to protect sensitive data.</p>
+                    <p><strong>Key Features:</strong></p>
+                    <ul>
+                        <li>Symmetric algorithm (same key for encryption and decryption)</li>
+                        <li>Block size: 128 bits (16 bytes)</li>
+                        <li>Key sizes: 128, 192, or 256 bits</li>
+                        <li>Secure against all known practical attacks</li>
+                    </ul>
+                    <p><strong>Key Handling:</strong> Any length key is automatically hashed to create secure AES keys (SHA-256 used for key derivation).</p>
                 </div>
             </div>
         </div>
+        
+        <footer>
+            <p>AES Implementation using PyCryptodome | Secure Data Encryption</p>
+        </footer>
     </div>
     
     <script>
@@ -110,62 +352,65 @@
             });
         });
         
-        // Key information display
-        function updateKeyInfo() {
-            const key = document.getElementById('encryptKey').value;
-            const keyInfo = document.getElementById('keyInfo');
-            
-            if (key.length > 0) {
-                keyInfo.innerHTML = `
-                    <p>Key will be securely hashed to:</p>
-                    <ul>
-                        <li>AES-128: First 16 bytes of SHA-256 hash</li>
-                        <li>AES-192: First 24 bytes of SHA-256 hash</li>
-                        <li>AES-256: First 32 bytes of SHA-256 hash (used by default)</li>
-                    </ul>
-                `;
-            } else {
-                keyInfo.innerHTML = '';
-            }
-        }
-        
-        document.getElementById('encryptKey').addEventListener('input', updateKeyInfo);
-        document.getElementById('decryptKey').addEventListener('input', updateKeyInfo);
+        // Hide alerts initially
+        document.getElementById('errorAlert').style.display = 'none';
+        document.getElementById('successAlert').style.display = 'none';
         
         // Clipboard functionality
         function copyToClipboard(elementId, button) {
             const element = document.getElementById(elementId);
             const text = element.textContent;
-            const originalText = button.innerHTML;
+            const originalBtnText = button.innerHTML;
             
             navigator.clipboard.writeText(text).then(() => {
                 button.innerHTML = "✓ Copied!";
                 button.style.backgroundColor = "#4CAF50";
                 
                 setTimeout(() => {
-                    button.innerHTML = originalText;
+                    button.innerHTML = originalBtnText;
                     button.style.backgroundColor = "";
                 }, 2000);
             }).catch(err => {
                 console.error('Failed to copy: ', err);
-                button.innerHTML = "✗ Failed";
-                button.style.backgroundColor = "#f44336";
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.style.backgroundColor = "";
-                }, 2000);
-                
                 // Fallback for older browsers
                 const textarea = document.createElement('textarea');
                 textarea.value = text;
                 document.body.appendChild(textarea);
                 textarea.select();
-                document.execCommand('copy');
+                try {
+                    document.execCommand('copy');
+                    button.innerHTML = "✓ Copied!";
+                    button.style.backgroundColor = "#4CAF50";
+                } catch (err) {
+                    button.innerHTML = "✗ Failed";
+                    button.style.backgroundColor = "#f44336";
+                }
                 document.body.removeChild(textarea);
+                
+                setTimeout(() => {
+                    button.innerHTML = originalBtnText;
+                    button.style.backgroundColor = "";
+                }, 2000);
             });
         }
         
-        // Encryption
+        // Show alert function
+        function showAlert(element, message, isError = true) {
+            element.textContent = message;
+            element.style.display = 'block';
+            
+            if (isError) {
+                element.className = 'alert alert-danger';
+            } else {
+                element.className = 'alert alert-success';
+            }
+            
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Encrypt button click
         document.getElementById('encryptBtn').addEventListener('click', async () => {
             const plaintext = document.getElementById('encryptPlaintext').value;
             const key = document.getElementById('encryptKey').value;
@@ -189,13 +434,6 @@
                 if (data.status === 'success') {
                     document.getElementById('encryptedText').textContent = data.ciphertext;
                     document.getElementById('encryptResult').style.display = 'block';
-                    
-                    // Show key details
-                    document.getElementById('aes128Key').textContent = data.key_info.aes_128;
-                    document.getElementById('aes192Key').textContent = data.key_info.aes_192;
-                    document.getElementById('aes256Key').textContent = data.key_info.aes_256;
-                    document.getElementById('keyDetails').style.display = 'block';
-                    
                     showAlert(document.getElementById('successAlert'), 'Encryption successful!', false);
                 } else {
                     showAlert(document.getElementById('errorAlert'), data.message);
@@ -206,7 +444,7 @@
             }
         });
         
-        // Decryption
+        // Decrypt button click
         document.getElementById('decryptBtn').addEventListener('click', async () => {
             const ciphertext = document.getElementById('decryptCiphertext').value;
             const key = document.getElementById('decryptKey').value;
@@ -239,22 +477,6 @@
                 console.error(error);
             }
         });
-        
-        // Alert handling
-        function showAlert(element, message, isError = true) {
-            element.textContent = message;
-            element.style.display = 'block';
-            
-            if (isError) {
-                element.className = 'alert alert-danger';
-            } else {
-                element.className = 'alert alert-success';
-            }
-            
-            setTimeout(() => {
-                element.style.display = 'none';
-            }, 5000);
-        }
     </script>
 </body>
 </html>

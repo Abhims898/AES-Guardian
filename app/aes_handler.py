@@ -1,6 +1,7 @@
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
+from Crypto.Hash import SHA256
 import base64
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -12,6 +13,18 @@ class AESHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', content_type)
         self.end_headers()
+
+    def _process_key(self, key_str):
+        """Convert any length key string to valid AES key (16, 24, or 32 bytes)"""
+        # Hash the key string to get consistent length
+        key_hash = SHA256.new(key_str.encode('utf-8')).digest()
+        
+        # Offer all three key sizes in the response
+        return {
+            'aes_128': key_hash[:16],  # 16 bytes for AES-128
+            'aes_192': key_hash[:24],  # 24 bytes for AES-192
+            'aes_256': key_hash[:32]   # 32 bytes for AES-256
+        }
 
     def do_GET(self):
         if self.path == '/styles.css':
@@ -47,10 +60,12 @@ class AESHandler(BaseHTTPRequestHandler):
         try:
             if action == 'encrypt':
                 plaintext = post_data['plaintext'][0]
-                key = post_data['key'][0].encode('utf-8')
+                key_str = post_data['key'][0]
                 
-                if len(key) not in [16, 24, 32]:
-                    raise ValueError("Key must be 16, 24, or 32 bytes long")
+                # Process key to get all three variants
+                key_variants = self._process_key(key_str)
+                # Use AES-256 by default (most secure)
+                key = key_variants['aes_256']
                 
                 iv = get_random_bytes(16)
                 cipher = AES.new(key, AES.MODE_CBC, iv)
@@ -61,19 +76,37 @@ class AESHandler(BaseHTTPRequestHandler):
                 response['status'] = 'success'
                 response['ciphertext'] = base64.b64encode(encrypted_data).decode('utf-8')
                 response['iv'] = base64.b64encode(iv).decode('utf-8')
+                response['key_info'] = {
+                    'aes_128_key': base64.b64encode(key_variants['aes_128']).decode('utf-8'),
+                    'aes_192_key': base64.b64encode(key_variants['aes_192']).decode('utf-8'),
+                    'aes_256_key': base64.b64encode(key_variants['aes_256']).decode('utf-8')
+                }
                 
             elif action == 'decrypt':
                 ciphertext = base64.b64decode(post_data['ciphertext'][0])
-                key = post_data['key'][0].encode('utf-8')
-                iv = ciphertext[:16]
-                actual_ciphertext = ciphertext[16:]
+                key_str = post_data['key'][0]
                 
-                cipher = AES.new(key, AES.MODE_CBC, iv)
-                decrypted_padded = cipher.decrypt(actual_ciphertext)
-                plaintext = unpad(decrypted_padded, AES.block_size).decode('utf-8')
+                # Process key to get all three variants
+                key_variants = self._process_key(key_str)
+                # Try all key sizes for decryption
+                decrypted = None
+                for key_size, key in key_variants.items():
+                    try:
+                        iv = ciphertext[:16]
+                        actual_ciphertext = ciphertext[16:]
+                        cipher = AES.new(key, AES.MODE_CBC, iv)
+                        decrypted_padded = cipher.decrypt(actual_ciphertext)
+                        decrypted = unpad(decrypted_padded, AES.block_size).decode('utf-8')
+                        response['used_key_size'] = key_size
+                        break
+                    except (ValueError, KeyError):
+                        continue
+                
+                if decrypted is None:
+                    raise ValueError("Decryption failed with all key sizes. Please check your key.")
                 
                 response['status'] = 'success'
-                response['plaintext'] = plaintext
+                response['plaintext'] = decrypted
                 
             else:
                 response['status'] = 'error'

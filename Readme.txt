@@ -21,7 +21,7 @@ Technology Stack
 
 Backend: Python (PyCryptodome)
 
-Frontend: HTML5, CSS3, JavaScript
+Frontend: HTML
 
 Server: Python HTTP.server
 
@@ -90,4 +90,5 @@ Security audit recommendations
 GitHub Repository Link: https://github.com/Abhims898/AES-Guardian
 
 Render Cloud Link for demo: https://aes-guardian.onrender.com
+
 

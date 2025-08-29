@@ -38,10 +38,6 @@ git clone https://github.com/Abhims898/AES-Guardian
 # Install dependencies
 pip install pycryptodome
 
-# Run application
-python wsgi.py
-Access the application at: http://localhost:8000
-
 
 Usage
 
@@ -90,5 +86,6 @@ Security audit recommendations
 GitHub Repository Link: https://github.com/Abhims898/AES-Guardian
 
 Render Cloud Link for demo: https://aes-guardian.onrender.com
+
 
 
